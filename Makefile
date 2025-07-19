@@ -154,7 +154,7 @@ libxxhash.$(SHARED_EXT): libxxhash.$(SHARED_EXT_MAJOR)
 libxxhash: $(LIBXXH) libxxhash.$(SHARED_EXT_MAJOR) libxxhash.$(SHARED_EXT)
 
 .PHONY: lib  ## generate static and dynamic xxhash libraries
-lib: libxxhash.a libxxhash
+lib: libxxhash.a #libxxhash
 
 
 # helper targets

@@ -125,7 +125,11 @@ XSUM_API FILE* XSUM_fopen(const char* filename, const char* mode)
 XSUM_ATTRIBUTE((__format__(__printf__, 2, 0)))
 XSUM_API int XSUM_vfprintf(FILE* stream, const char* format, va_list ap)
 {
-    return vfprintf(stream, format, ap);
+    int ret = vfprintf(stream, format, ap);
+#if defined(__amiga__)
+    fflush(stream);
+#endif
+    return ret;
 }
 
 static int XSUM_stat(const char* infilename, XSUM_stat_t* statbuf)
@@ -138,6 +142,9 @@ static int XSUM_stat(const char* infilename, XSUM_stat_t* statbuf)
 }
 
 #ifndef XSUM_NO_MAIN
+#if defined(__amiga__)
+__stdargs
+#endif
 int main(int argc, const char* argv[])
 {
 #ifdef __OpenBSD__

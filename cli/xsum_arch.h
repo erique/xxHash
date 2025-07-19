@@ -172,6 +172,34 @@
 #  else
 #    define XSUM_ARCH "loongarch64"
 #  endif
+#elif defined (__mc68000) && defined(__HAVE_68881__)
+#  if        defined(__mc68010)
+#    define XSUM_ARCH "mc68010 + mc68881"
+#  elif      defined(__mc68020)
+#    define XSUM_ARCH "mc68020 + mc68881"
+#  elif      defined(__mc68030)
+#    define XSUM_ARCH "mc68030 + mc68881"
+#  elif      defined(__mc68040)
+#    define XSUM_ARCH "mc68040 + mc68881"
+#  elif      defined(__mc68060)
+#    define XSUM_ARCH "mc68060 + mc68881"
+#  else
+#    define XSUM_ARCH "mc680x0 + mc68881"
+#  endif
+#elif defined (__mc68000)
+#  if        defined(__mc68010)
+#    define XSUM_ARCH "mc68010"
+#  elif      defined(__mc68020)
+#    define XSUM_ARCH "mc68020"
+#  elif      defined(__mc68030)
+#    define XSUM_ARCH "mc68030"
+#  elif      defined(__mc68040)
+#    define XSUM_ARCH "mc68040"
+#  elif      defined(__mc68060)
+#    define XSUM_ARCH "mc68060"
+#  else
+#    define XSUM_ARCH "mc680x0"
+#  endif
 #else
 #  define XSUM_ARCH "unknown"
 #endif

@@ -34,7 +34,7 @@ XSUM_API int XSUM_log(const char* format, ...)
     int ret;
     va_list ap;
     va_start(ap, format);
-    ret = XSUM_vfprintf(stderr, format, ap);
+    ret = XSUM_vfprintf(stdout, format, ap);
     va_end(ap);
     return ret;
 }
@@ -58,7 +58,7 @@ XSUM_API int XSUM_logVerbose(int minLevel, const char* format, ...)
         int ret;
         va_list ap;
         va_start(ap, format);
-        ret = XSUM_vfprintf(stderr, format, ap);
+        ret = XSUM_vfprintf(stdout, format, ap);
         va_end(ap);
         return ret;
     }

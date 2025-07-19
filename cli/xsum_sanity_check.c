@@ -660,9 +660,12 @@ static void XSUM_testSecretGenerator(const void* customSeed, const XSUM_testdata
 {
     static int nbTests = 1;
     const int sampleIndex[SECRET_SAMPLE_NBBYTES] = { 0, 62, 131, 191, 241 };  /* position of sampled bytes */
-    XSUM_U8 secretBuffer[SECRET_SIZE_MAX] = {0};
+    // XSUM_U8 secretBuffer[SECRET_SIZE_MAX] = {0};
     XSUM_U8 samples[SECRET_SAMPLE_NBBYTES];
     int i;
+
+    XSUM_U8* secretBuffer = malloc(SECRET_SIZE_MAX);
+    memset(secretBuffer, 0x00, SECRET_SIZE_MAX);
 
     assert(testData->secretLen <= SECRET_SIZE_MAX);
     XXH3_generateSecret(secretBuffer, testData->secretLen, customSeed, testData->seedLen);
@@ -677,6 +680,7 @@ static void XSUM_testSecretGenerator(const void* customSeed, const XSUM_testdata
         exit(1);
     }
     nbTests++;
+    free(secretBuffer);
 }
 
 /*!
@@ -689,37 +693,47 @@ XSUM_API void XSUM_sanityCheck(void)
 {
     size_t i;
 #define SANITY_BUFFER_SIZE 2367
-    XSUM_U8 sanityBuffer[SANITY_BUFFER_SIZE];
+    XSUM_U8* sanityBuffer = malloc(SANITY_BUFFER_SIZE);
+    // XSUM_U8 sanityBuffer[SANITY_BUFFER_SIZE];
     const void* const secret = sanityBuffer + 7;
     const size_t secretSize = XXH3_SECRET_SIZE_MIN + 11;
-    assert(sizeof(sanityBuffer) >= 7 + secretSize);
+    const size_t sizeof_sanityBuffer = SANITY_BUFFER_SIZE;
+    assert(sizeof_sanityBuffer >= 7 + secretSize);
+    XSUM_logVerbose(3, "Sanity check --\n");
 
-    XSUM_fillTestBuffer(sanityBuffer, sizeof(sanityBuffer));
+    XSUM_fillTestBuffer(sanityBuffer, sizeof_sanityBuffer);
 
+    XSUM_logVerbose(3, "  XSUM_testXXH32\n");
     /* XXH32 */
     for (i = 0; i < (sizeof(XSUM_XXH32_testdata)/sizeof(XSUM_XXH32_testdata[0])); i++) {
         XSUM_testXXH32(sanityBuffer, &XSUM_XXH32_testdata[i]);
     }
+    XSUM_logVerbose(3, "  XSUM_testXXH64\n");
     /* XXH64 */
     for (i = 0; i < (sizeof(XSUM_XXH64_testdata)/sizeof(XSUM_XXH64_testdata[0])); i++) {
         XSUM_testXXH64(sanityBuffer, &XSUM_XXH64_testdata[i]);
     }
+    XSUM_logVerbose(3, "  XSUM_testXXH3\n");
     /* XXH3_64bits, seeded */
     for (i = 0; i < (sizeof(XSUM_XXH3_testdata)/sizeof(XSUM_XXH3_testdata[0])); i++) {
         XSUM_testXXH3(sanityBuffer, &XSUM_XXH3_testdata[i]);
     }
+    XSUM_logVerbose(3, "  XSUM_testXXH3_withSecret\n");
     /* XXH3_64bits, custom secret */
     for (i = 0; i < (sizeof(XSUM_XXH3_withSecret_testdata)/sizeof(XSUM_XXH3_withSecret_testdata[0])); i++) {
         XSUM_testXXH3_withSecret(sanityBuffer, secret, secretSize, &XSUM_XXH3_withSecret_testdata[i]);
     }
+    XSUM_logVerbose(3, "  XSUM_testXXH128\n");
     /* XXH128 */
     for (i = 0; i < (sizeof(XSUM_XXH128_testdata)/sizeof(XSUM_XXH128_testdata[0])); i++) {
         XSUM_testXXH128(sanityBuffer, &XSUM_XXH128_testdata[i]);
     }
+    XSUM_logVerbose(3, "  XSUM_testXXH128_withSecret\n");
     /* XXH128 with custom Secret */
     for (i = 0; i < (sizeof(XSUM_XXH128_withSecret_testdata)/sizeof(XSUM_XXH128_withSecret_testdata[0])); i++) {
         XSUM_testXXH128_withSecret(sanityBuffer, secret, secretSize, &XSUM_XXH128_withSecret_testdata[i]);
     }
+    XSUM_logVerbose(3, "  XSUM_testSecretGenerator\n");
     /* secret generator */
     for (i = 0; i < (sizeof(XSUM_XXH3_generateSecret_testdata)/sizeof(XSUM_XXH3_generateSecret_testdata[0])); i++) {
         assert(XSUM_XXH3_generateSecret_testdata[i].seedLen <= SANITY_BUFFER_SIZE);
@@ -728,6 +742,7 @@ XSUM_API void XSUM_sanityCheck(void)
 
     XSUM_logVerbose(3, "\r%70s\r", "");       /* Clean display line */
     XSUM_logVerbose(3, "Sanity check -- all tests ok\n");
+    free(sanityBuffer);
 }
 
 #endif /* !XSUM_NO_TESTS */
