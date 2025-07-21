@@ -293,7 +293,7 @@ static void XSUM_benchHash(hashFunction h, const char* hName, int testID,
             }
             if (ticksPerHash < fastestH) fastestH = ticksPerHash;
             if (fastestH>0.) { /* avoid div by zero */
-                XSUM_logVerbose(2, "%2i-%-*.*s : %10u -> %8.0f it/s (%7.1f MB/s) \r",
+                XSUM_logVerbose(2, "%2i-%-*.*s : %10u -> %8.0f it/s (%5.3f MB/s) \r",
                             iterationNb,
                             HASHNAME_MAX, HASHNAME_MAX, hName,
                             (unsigned)bufferSize,
@@ -305,7 +305,7 @@ static void XSUM_benchHash(hashFunction h, const char* hName, int testID,
             nbh_perIteration = (XSUM_U32)nbh_perSecond;
         }
     }
-    XSUM_logVerbose(1, "%2i#%-*.*s : %10u -> %8.0f it/s (%7.1f MB/s) \n",
+    XSUM_logVerbose(1, "%2i#%-*.*s : %10u -> %8.0f it/s (%5.3f MB/s) \n",
                     testID,
                     HASHNAME_MAX, HASHNAME_MAX, hName,
                     (unsigned)bufferSize,
