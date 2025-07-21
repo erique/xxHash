@@ -2938,6 +2938,36 @@ XXH_PUBLIC_API unsigned XXH_versionNumber (void) { return XXH_VERSION_NUMBER; }
 
 /*!
  * @internal
+ * @fn xxh_u32 XXH_mult32(xxh_u32 x, xxh_u32 y)
+ * @brief Multiplies two 32bit integers.
+ *
+ * @param x First 32-bit factor
+ * @param acc Second 32-bit factor
+ * @return The 32-bit product
+ */
+
+XXH_FORCE_INLINE xxh_u32 XXH_mult32(xxh_u32 x, xxh_u32 y)
+{
+// 68000 doesn't have 32bit mult; cross multiply manually
+#if defined(__mc68000__) && \
+   !defined(__mc68020__) && \
+   !defined(__mc68030__) && \
+   !defined(__mc68040__) && \
+   !defined(__mc68060__)
+    xxh_u32 a_lo = x, b_lo = y;
+    xxh_u32 a_hi = (x << 16) | (x >> 16);
+    xxh_u32 b_hi = (y << 16) | (y >> 16);
+    a_hi = (uint16_t)b_lo * (uint16_t)a_hi;
+    b_hi = (uint16_t)a_lo * (uint16_t)b_hi;
+    a_lo = (uint16_t)a_lo * (uint16_t)b_lo;
+    return a_lo + ((a_hi + b_hi) << 16);
+#else
+    return x * y;
+#endif
+}
+
+/*!
+ * @internal
  * @brief Normal stripe processing routine.
  *
  * This shuffles the bits so that any bit from @p input impacts several bits in
@@ -2949,9 +2979,9 @@ XXH_PUBLIC_API unsigned XXH_versionNumber (void) { return XXH_VERSION_NUMBER; }
  */
 static xxh_u32 XXH32_round(xxh_u32 acc, xxh_u32 input)
 {
-    acc += input * XXH_PRIME32_2;
+    acc += XXH_mult32(input, XXH_PRIME32_2);
     acc  = XXH_rotl32(acc, 13);
-    acc *= XXH_PRIME32_1;
+    acc  = XXH_mult32(acc, XXH_PRIME32_1);
 #if (defined(__SSE4_1__) || defined(__aarch64__) || defined(__wasm_simd128__)) && !defined(XXH_ENABLE_AUTOVECTORIZE)
     /*
      * UGLY HACK:
@@ -3061,7 +3091,7 @@ XXH32_consumeLong_C(
     return input;
 }
 
-#if defined(__mc68000)
+#if 0//defined(__mc68000)
 #warning "Using inline-asm for 68020..."
 #undef XXH32_consumeLong
 #define XXH32_consumeLong XXH32_consumeLong_68020
