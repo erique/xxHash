@@ -3030,6 +3030,8 @@ XXH32_initAccs(xxh_u32 *acc, xxh_u32 seed)
     acc[3] = seed - XXH_PRIME32_1;
 }
 
+#define XXH32_consumeLong XXH32_consumeLong_C
+
 /*!
  * @internal
  * @brief Consumes a block of data for XXH32().
@@ -3037,7 +3039,7 @@ XXH32_initAccs(xxh_u32 *acc, xxh_u32 seed)
  * @return the end input pointer.
  */
 XXH_FORCE_INLINE const xxh_u8 *
-XXH32_consumeLong(
+XXH32_consumeLong_C(
     xxh_u32 *XXH_RESTRICT acc,
     xxh_u8 const *XXH_RESTRICT input,
     size_t len,
@@ -3058,6 +3060,83 @@ XXH32_consumeLong(
 
     return input;
 }
+
+#if defined(__mc68000)
+#warning "Using inline-asm for 68020..."
+#undef XXH32_consumeLong
+#define XXH32_consumeLong XXH32_consumeLong_68020
+
+XXH_FORCE_INLINE const xxh_u8 *
+XXH32_consumeLong_68020(
+    xxh_u32 *XXH_RESTRICT acc,
+    xxh_u8 const *XXH_RESTRICT input,
+    size_t len,
+    XXH_alignment align
+)
+{
+    const xxh_u8* const bEnd = input + len;
+    const xxh_u8* const limit = bEnd - 15;
+
+    XXH_ASSERT(acc != NULL);
+    XXH_ASSERT(input != NULL);
+    XXH_ASSERT(len >= 16);
+
+    uint32_t rot13 = 13;
+    uint32_t rot16 = 16;
+
+    do {
+        __asm__ volatile (
+            "move.l  (%[in])+, %%d0          \n\t"
+            "ror.w   #8, %%d0                \n\t"
+            "ror.l   %[rot16], %%d0          \n\t"
+            "ror.w   #8, %%d0                \n\t"
+            "muls.l  #0x85EBCA77, %%d0       \n\t"
+            "add.l   %%d0, %[acc0]           \n\t"
+            "rol.l   %[rot13], %[acc0]       \n\t"
+            "muls.l  #0x9E3779B1, %[acc0]    \n\t"
+
+            "move.l  (%[in])+, %%d1          \n\t"
+            "ror.w   #8, %%d1                \n\t"
+            "ror.l   %[rot16], %%d1          \n\t"
+            "ror.w   #8, %%d1                \n\t"
+            "muls.l  #0x85EBCA77, %%d1       \n\t"
+            "add.l   %%d1, %[acc1]           \n\t"
+            "rol.l   %[rot13], %[acc1]       \n\t"
+            "muls.l  #0x9E3779B1, %[acc1]    \n\t"
+
+            "move.l  (%[in])+, %%d0          \n\t"
+            "ror.w   #8, %%d0                \n\t"
+            "ror.l   %[rot16], %%d0          \n\t"
+            "ror.w   #8, %%d0                \n\t"
+            "muls.l  #0x85EBCA77, %%d0       \n\t"
+            "add.l   %%d0, %[acc2]           \n\t"
+            "rol.l   %[rot13], %[acc2]       \n\t"
+            "muls.l  #0x9E3779B1, %[acc2]    \n\t"
+
+            "move.l  (%[in])+, %%d1          \n\t"
+            "ror.w   #8, %%d1                \n\t"
+            "ror.l   %[rot16], %%d1          \n\t"
+            "ror.w   #8, %%d1                \n\t"
+            "muls.l  #0x85EBCA77, %%d1       \n\t"
+            "add.l   %%d1, %[acc3]           \n\t"
+            "rol.l   %[rot13], %[acc3]       \n\t"
+            "muls.l  #0x9E3779B1, %[acc3]    \n\t"
+
+            : [in] "+a" (input),
+              [acc0] "+d" (acc[0]),
+              [acc1] "+d" (acc[1]),
+              [acc2] "+d" (acc[2]),
+              [acc3] "+d" (acc[3])
+            : [rot13] "d" (rot13),
+              [rot16] "d" (rot16)
+            : "d0", "d1", "memory"
+        );
+
+    } while (input < limit);
+
+    return input;
+}
+#endif
 
 /*!
  * @internal
